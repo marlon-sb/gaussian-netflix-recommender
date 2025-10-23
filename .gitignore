@@ -9,10 +9,6 @@ __pycache__/
 # IDE files
 .idea/
 
-# Large data files
-netflix_incomplete.txt
-netflix_complete.txt
-
 # OS-specific files
 .DS_Store
 Thumbs.db
