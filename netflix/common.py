@@ -64,9 +64,9 @@ def plot(X: np.ndarray, mixture: GaussianMixture, post: np.ndarray,
             arc = Arc(point,
                       r,
                       r,
-                      0,
-                      theta,
-                      theta + offset,
+                      angle=0,
+                      theta1= theta,
+                      theta2= theta + offset,
                       edgecolor=color[j])
             ax.add_patch(arc)
             theta += offset
