@@ -63,6 +63,32 @@ def run_kmeans_experiment():
         print(f"Cost|K={K} = {result['cost']:.4f}")
 
 
+def run_em_experiment(X):
+    """
+    Runs the Naive EM algorithm on the toy dataset and prints the
+    final log-likelihood.
+    """
+    print("\n--- Starting Naive EM Experiment ---")
+
+    K = 3
+    seed = 0
+
+    print(f"Running EM for K={K}, seed={seed}...")
+
+    # 1. Initialize the model
+    mixture, post = common.init(X, K, seed)
+
+    # 2. Run the EM algorithm
+    # We pass 'post' but 'run' will ignore it and do a first E-step
+    mixture, post, ll = naive_em.run(X, mixture, post)
+
+    print(f"\n[EM Run] Final Log-Likelihood: {ll:.4f}")
+
+    # 3. Plot the result
+    title = f"Naive EM (K={K}) | Seed={seed} | LL={ll:.2f}"
+    common.plot(X, mixture, post, title)
+
 
 if __name__ == "__main__":
-    run_kmeans_experiment()
+    X_toy = np.loadtxt('toy_data.txt')
+    run_em_experiment(X_toy)
