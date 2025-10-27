@@ -65,28 +65,47 @@ def run_kmeans_experiment():
 
 def run_em_experiment(X):
     """
-    Runs the Naive EM algorithm on the toy dataset and prints the
-    final log-likelihood.
+    Runs the Naive EM algorithm on the toy dataset for K=1, 2, 3, 4,
+    and calculates the BIC for each.
     """
-    print("\n--- Starting Naive EM Experiment ---")
+    print("\n--- Starting Naive EM Experiment (BIC) ---")
 
-    K = 3
-    seed = 0
+    K_values = [1, 2, 3, 4]
+    seeds = [0, 1, 2, 3, 4]
 
-    print(f"Running EM for K={K}, seed={seed}...")
+    best_bic_score = -float('inf')
+    best_K = -1
+    bic_scores = []
 
-    # 1. Initialize the model
-    mixture, post = common.init(X, K, seed)
+    for K in K_values:
+        print(f"\n--- Testing K={K} ---")
 
-    # 2. Run the EM algorithm
-    # We pass 'post' but 'run' will ignore it and do a first E-step
-    mixture, post, ll = naive_em.run(X, mixture, post)
+        best_ll_for_K = -float('inf')
+        best_mixture_for_K = None
 
-    print(f"\n[EM Run] Final Log-Likelihood: {ll:.4f}")
+        for seed in seeds:
+            mixture, post = common.init(X, K, seed)
+            mixture, post, ll = naive_em.run(X, mixture, post)
 
-    # 3. Plot the result
-    title = f"Naive EM (K={K}) | Seed={seed} | LL={ll:.2f}"
-    common.plot(X, mixture, post, title)
+            if ll > best_ll_for_K:
+                best_ll_for_K = ll
+                best_mixture_for_K = mixture
+
+        bic_score = common.bic(X, best_mixture_for_K, best_ll_for_K)
+        bic_scores.append((K, bic_score, best_ll_for_K))
+
+        print(f"  Best Log-Likelihood: {best_ll_for_K:.4f}")
+        print(f"  BIC Score: {bic_score:.4f}")
+
+        if bic_score > best_bic_score:
+            best_bic_score = bic_score
+            best_K = K
+
+    print("\n--- BIC Results ---")
+    for K, bic_val, ll_val in bic_scores:
+        print(f"K={K}: LL = {ll_val:.4f}, BIC = {bic_val:.4f}")
+
+    print(f"\nBest model: K={best_K} (Highest BIC)")
 
 
 if __name__ == "__main__":
