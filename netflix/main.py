@@ -108,6 +108,59 @@ def run_em_experiment(X):
     print(f"\nBest model: K={best_K} (Highest BIC)")
 
 
+def run_em_test(X_incomplete, X_gold):
+    """
+    Runs the EM algorithm on the test dataset and compares
+    the final log-likelihood to the gold standard.
+    """
+    print("\n--- Starting EM Test ---")
+
+    K = 4
+    seed = 0
+    gold_ll = None
+
+    # Parse test_solutions.txt to find the final LL
+    try:
+        with open('test_solutions.txt', 'r') as f:
+            for line in f:
+                # Find lines that start with "LL:"
+                if line.strip().startswith("LL:"):
+                    # Overwrite gold_ll, so we get the *last* one
+                    gold_ll = float(line.split(':')[1].strip())
+
+        if gold_ll is None:
+            print("  ERROR: Could not find 'LL:' in test_solutions.txt")
+            return
+    except FileNotFoundError:
+        print("  ERROR: 'test_solutions.txt' not found.")
+        return
+    except Exception as e:
+        print(f"  ERROR: Failed to parse test_solutions.txt: {e}")
+        return
+
+    # Run our EM algorithm
+    mixture, post = common.init(X_incomplete, K, seed)
+    mixture, post, ll = em.run(X_incomplete, mixture, post)
+
+    print(f"  [EM Test] K={K}, Seed={seed}")
+    print(f"  Your Log-Likelihood: {ll:.12f}")
+    print(f"  Gold Log-Likelihood: {gold_ll:.12f}")
+
+    if np.isclose(ll, gold_ll):
+        print("\n  SUCCESS: Log-likelihood matches test solution.")
+    else:
+        print("\n  ERROR: Log-likelihood does not match.")
+
+
 if __name__ == "__main__":
-    X_toy = np.loadtxt('toy_data.txt')
-    run_em_experiment(X_toy)
+
+    try:
+        X_toy = np.loadtxt('toy_data.txt')
+        X_test_incomplete = np.loadtxt('test_incomplete.txt')
+        X_test_gold = np.loadtxt('test_complete.txt')
+        print("Loaded all data files.")
+    except FileNotFoundError:
+        print("Error: A data file was not found.")
+        exit()
+
+    run_em_test(X_test_incomplete, X_test_gold)
