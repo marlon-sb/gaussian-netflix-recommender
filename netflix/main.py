@@ -152,15 +152,62 @@ def run_em_test(X_incomplete, X_gold):
         print("\n  ERROR: Log-likelihood does not match.")
 
 
+def run_netflix_experiment(X_incomplete, X_gold):
+    """
+    Runs the EM algorithm on the Netflix dataset for K=1 and K=12.
+    Reports the best log-likelihoods and the final RMSE.
+    """
+    print("\n--- Starting Final Netflix Experiment ---")
+
+    K_values = [1, 12]
+    seeds = [0, 1, 2, 3, 4]
+    best_results = {}
+
+    for K in K_values:
+        print(f"\n--- Testing K={K} ---")
+        best_ll_for_K = -float('inf')
+        best_mixture_for_K = None
+
+        for seed in seeds:
+            print(f"  Running seed {seed}...")
+            mixture, post = common.init(X_incomplete, K, seed)
+            mixture, post, ll = em.run(X_incomplete, mixture, post)
+            print(f"    Log-Likelihood: {ll:.4f}")
+
+            if ll > best_ll_for_K:
+                best_ll_for_K = ll
+                best_mixture_for_K = mixture
+
+        print(f"  Best Log-Likelihood for K={K}: {best_ll_for_K:.4f}")
+        best_results[K] = (best_ll_for_K, best_mixture_for_K)
+
+    print("\nFinal Results")
+    ll_k1 = best_results[1][0]
+    ll_k12 = best_results[12][0]
+
+    print(f"Log-likelihood|K=1 = {ll_k1:.4f}")
+    print(f"Log-likelihood|K=12 = {ll_k12:.4f}")
+
+    print("\nCalculating RMSE")
+    best_mixture_k12 = best_results[12][1]
+
+    X_pred = em.fill_matrix(X_incomplete, best_mixture_k12)
+
+    mask = (X_gold != 0)
+    rmse_val = common.rmse(X_gold[mask], X_pred[mask])
+
+    print(f"RMSE = {rmse_val:.4f}")
+
+
 if __name__ == "__main__":
 
     try:
-        X_toy = np.loadtxt('toy_data.txt')
-        X_test_incomplete = np.loadtxt('test_incomplete.txt')
-        X_test_gold = np.loadtxt('test_complete.txt')
-        print("Loaded all data files.")
+        X_incomplete = np.loadtxt('netflix_incomplete.txt')
+        X_gold = np.loadtxt('netflix_complete.txt')
+        print("Loaded Netflix data files.")
     except FileNotFoundError:
-        print("Error: A data file was not found.")
+        print("Error: Netflix data file not found.")
         exit()
 
-    run_em_test(X_test_incomplete, X_test_gold)
+
+    run_netflix_experiment(X_incomplete, X_gold)
